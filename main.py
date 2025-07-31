@@ -21,7 +21,13 @@ posts_list: List[Post] = []
 def serialized_posts_list():
     converted_posts_list = []
     for post in posts_list:
-        converted_posts_list.append(post.model_dump())
+        to_append = {
+            "author": post.author,
+            "title": post.title,
+            "content": post.content,
+            "creation_datetime": post.creation_datetime.isoformat()
+        }
+        converted_posts_list.append(to_append)
     return converted_posts_list
 
 # Q1
@@ -36,34 +42,20 @@ def home():
         html_content = file.read()
     return Response(content=html_content, status_code=200, media_type="text/html")
 
-# Q3
-@app.get("/{full_path:path}")
-def catch_all(full_path: str):
-    with open("notFound.html", "r", encoding="utf-8") as file:
-        html_content = file.read()
-    return Response(content=html_content, status_code=404, media_type="text/html")
 
-# Q4: POST /posts
+# Q4
 @app.post("/posts")
 def create_posts(new_posts_list: List[Post]):
     for new_post in new_posts_list:
         posts_list.append(new_post)
-    return Response(
-        content=json.dumps({"posts": serialized_posts_list()}),
-        status_code=201,
-        media_type="application/json"
-    )
+    return Response(content=json.dumps({"posts": serialized_posts_list()}), status_code=201, media_type="application/json")
 
-# Q5: GET /posts
+# Q5
 @app.get("/posts")
 def list_posts():
-    return Response(
-        content=json.dumps({"posts": serialized_posts_list()}),
-        status_code=200,
-        media_type="application/json"
-    )
+    return Response(content=json.dumps({"posts": serialized_posts_list()}), status_code=200, media_type="application/json")
 
-# Q6: PUT /posts
+# Q6
 @app.put("/posts")
 def update_or_create_posts(posts_payload: List[Post]):
     global posts_list
@@ -78,27 +70,26 @@ def update_or_create_posts(posts_payload: List[Post]):
             posts_list.append(new_post)
     return {"posts": serialized_posts_list()}
 
-#Bonus
+# Bonus
 @app.get("/ping/auth")
-def read_ping_with_auth(request: Request):
+def auth_with_ping(request: Request):
     valid_username = "admin"
     valid_password = "123456"
     authorization_header = request.headers.get("Authorization")
     if not authorization_header:
-        return JSONResponse(
-            content={"message": "Authorization header is missing"},
-            status_code=401
-        )
+        return JSONResponse(content={"message": "Authorization header is missing"}, status_code=401)
     auth_type, credentials = authorization_header.split(" ")
-    decoded_credentials = base64.b64decode(credentials.encode('utf-8')).decode('utf-8')
-    username, password = decoded_credentials.split(':')
-    if username != valid_username or password != valid_password:
-        return JSONResponse(content={"message": "unauthorized Ressource"},status_code=401)
-    elif username == valid_username and password == valid_password:
+    credentials_decoded = base64.b64decode(credentials.encode('utf-8')).decode('utf-8')
+    username, password = credentials_decoded.split(':')
+    if username == valid_username and password == valid_password:
         return Response(content="pong", media_type="text/plain", status_code=200)
+    else:
+        return JSONResponse(content={"message": "Unauthorized ressource"},status_code=401)
 
+
+#Q3
 @app.get("/{full_path:path}")
 def catch_all(full_path: str):
-    with open ("notFound.html.html" , "r" , encoding="utf-8") as file:
+    with open ("notFound.html" , "r" , encoding="utf-8") as file:
         html_content = file.read()
     return Response(content=html_content,status_code=404,media_type="text/html")
