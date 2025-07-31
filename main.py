@@ -78,6 +78,7 @@ def update_or_create_posts(posts_payload: List[Post]):
             posts_list.append(new_post)
     return {"posts": serialized_posts_list()}
 
+#Bonus
 @app.get("/ping/auth")
 def read_ping_with_auth(request: Request):
     valid_username = "admin"
@@ -98,6 +99,6 @@ def read_ping_with_auth(request: Request):
 
 @app.get("/{full_path:path}")
 def catch_all(full_path: str):
-    with open ("404.html" , "r" , encoding="utf-8") as file:
+    with open ("notFound.html.html" , "r" , encoding="utf-8") as file:
         html_content = file.read()
     return Response(content=html_content,status_code=404,media_type="text/html")
